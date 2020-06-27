@@ -1,0 +1,12 @@
+/.idea/*
+/vendor/*
+
+# PHPUnit Generated files
+.phpunit.result.cache
+
+# PHPUnit
+/app/phpunit.xml
+/phpunit.xml
+
+# PHPUnit Build data
+/build/

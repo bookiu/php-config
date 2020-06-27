@@ -1,0 +1,15 @@
+{
+  "name": "vendor_name/sub",
+  "description": "description",
+  "minimum-stability": "stable",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "yaxin",
+      "email": "email@example.com"
+    }
+  ],
+  "require": {
+    
+  }
+}

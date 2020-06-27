@@ -1,0 +1,36 @@
+{
+  "name": "yaxin/php-config",
+  "description": "PHP config reader",
+  "type": "library",
+  "homepage": "https://github.com/yaxin-cn/php-config",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "yaxin",
+      "email": "yaxin.me@gmail.com"
+    }
+  ],
+  "require": {
+    "php": "^7.2",
+    "ext-json": "*",
+    "illuminate/config": "^7.0",
+    "symfony/yaml": "^5.1"
+  },
+  "require-dev": {
+    "php": "^7.2.5",
+    "phpunit/phpunit": "^8.5"
+  },
+  "autoload": {
+    "files": [
+      "src/helper.php"
+    ],
+    "psr-4": {
+      "Yaxin\\PHPConfig\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Yaxin\\TestCase\\PHPConfig\\": "tests//"
+    }
+  }
+}

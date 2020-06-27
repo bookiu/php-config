@@ -1,0 +1,25 @@
+version: "3"
+
+services:
+  redis:
+    image: redis:5.0-alpine
+    container_name: redis
+    restart: always
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis:/data
+    networks:
+      web_runtime:
+        aliases:
+          - redis
+          - cache
+
+networks:
+  web_runtime:
+    external: true
+
+volumes:
+  redis:
+    external:
+      name: redis
