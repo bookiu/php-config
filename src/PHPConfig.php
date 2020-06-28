@@ -4,6 +4,7 @@ namespace Yaxin\PHPConfig;
 
 use Exception;
 use Illuminate\Config\Repository;
+use Yaxin\PHPConfig\Exceptions\EnvironmentException;
 use Yaxin\PHPConfig\Parser\ParserFactory;
 
 
@@ -47,7 +48,7 @@ class PHPConfig extends Repository
 
 
     public function __construct(string $configPath, string $compileCachePath = null,
-                                string $environment = 'production')
+                                ?string $environment = null)
     {
         $this->setConfigPath($configPath);
         $this->setCompileCachePath($compileCachePath);
@@ -115,10 +116,14 @@ class PHPConfig extends Repository
     /**
      * Set current environment.
      *
-     * @param string $env
+     * @param string|null $env
      */
-    public function setEnvironment(string $env)
+    public function setEnvironment(?string $env)
     {
+        $env = $env === null ? $this->detectEnvironment() : $env;
+        if ($env === null) {
+            throw new EnvironmentException('Environment not set');
+        }
         $this->environment = $env;
     }
 
@@ -140,6 +145,24 @@ class PHPConfig extends Repository
     public function extensions()
     {
         return $this->extensions;
+    }
+
+    /**
+     * @return string|null
+     */
+    protected function detectEnvironment(): ?string
+    {
+        $configFiles = $this->getConfigFilePath('app', false);
+        if ($configFiles) {
+            $data = $this->getConfigFileData($configFiles[0]);
+            $env = null;
+            foreach (['env', 'environment'] as $k) {
+                if (isset($data[$k])) {
+                    return (string)$data[$k];
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -204,11 +227,17 @@ class PHPConfig extends Repository
      * @param $key
      * @return ConfigFile[]
      */
-    protected function getConfigFilePath($key): array
+    protected function getConfigFilePath($key, $withEnv = true): array
     {
         $keyParts = explode(self::CONFIG_KEY_SEP, (string)$key);
 
-        foreach ([pathJoin($this->configPath(), $this->getEnvironmentFolderName()), $this->configPath()] as $basePath) {
+        $scanDirs = [];
+        if ($withEnv) {
+            $scanDirs[] = pathJoin($this->configPath(), $this->getEnvironmentFolderName());
+        }
+        $scanDirs[] = $this->configPath();
+
+        foreach ($scanDirs as $basePath) {
             $segments = $keyParts;
             while ($segments) {
                 $path = pathJoin($basePath, call_user_func_array('pathJoin', $segments));
@@ -247,14 +276,26 @@ class PHPConfig extends Repository
             return;
         }
 
-        $parser = ParserFactory::createParserFromFile($filePath);
-        $data = $parser->parseFile($filePath);
+        $data = $this->getConfigFileData($configFile);
         $this->set($configFile->namespace(), $data);
 
         // Cache every step to optimize
         $this->saveToPHPFile($compiledPHPFile, $data);
         $this->cacheConfigNamespace($configFile->namespace());
         $this->setConfigFileLoaded($filePath);
+    }
+
+    /**
+     * Get config file data
+     *
+     * @param ConfigFile $configFile
+     * @return array
+     */
+    protected function getConfigFileData(ConfigFile $configFile): array
+    {
+        $filePath = $configFile->filePath();
+        $parser = ParserFactory::createParserFromFile($filePath);
+        return $parser->parseFile($filePath);
     }
 
     /**
